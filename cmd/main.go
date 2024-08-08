@@ -15,22 +15,26 @@ import (
 )
 
 func main() {
-	if errEnvLoad := godotenv.Load(); errEnvLoad != nil {
-		log.Printf("Error loading .env file: %v", errEnvLoad)
+	err := godotenv.Load()
+	if err != nil {
+		log.Printf("error loading .env file: %v", err)
 	}
 	_, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	lis, errListen := net.Listen("tcp", fmt.Sprintf("%v:%v", os.Getenv("SERVER_HOST_GRPC"), os.Getenv("SERVER_PORT_GRPC")))
-	if errListen != nil {
-		log.Fatalf("failed to listen: %v", errListen)
+	lis, err := net.Listen("tcp", fmt.Sprintf("%v:%v", os.Getenv("SERVER_HOST_GRPC"), os.Getenv("SERVER_PORT_GRPC")))
+	if err != nil {
+		log.Fatalf("failed to listen: %v", err)
 	}
+
 	s := grpc.NewServer()
 	reflection.Register(s)
 	chat_server_v1.RegisterChatV1Server(s, &server.Server{})
+
 	log.Printf("server listening at %v", lis.Addr())
 
-	if errServe := s.Serve(lis); errServe != nil {
-		log.Fatalf("failed to serve: %v", errServe)
+	err = s.Serve(lis)
+	if err != nil {
+		log.Fatalf("failed to serve: %v", err)
 	}
 }
